@@ -93,6 +93,7 @@ public class Solution {
 		EndCost = CostMatrix[Vehicles[VehIndex].CurLoc][0];
 		Vehicles[VehIndex].AddNode(Nodes[0]);
 		this.Cost += EndCost;
+		System.out.println("cost is"+Cost);
 
 	}
 
@@ -269,210 +270,210 @@ public class Solution {
 		}
 	}
 
-	public void InterRouteLocalSearch(Node[] Nodes, double[][] CostMatrix) {
-
-		// We use 1-0 exchange move
-		ArrayList<Node> RouteFrom;
-		ArrayList<Node> RouteTo;
-
-		int MovingNodeDemand = 0;
-
-		int VehIndexFrom, VehIndexTo;
-		double BestNCost, NeigthboorCost;
-
-		int SwapIndexA = -1, SwapIndexB = -1, SwapRouteFrom = -1, SwapRouteTo = -1;
-
-		int MAX_ITERATIONS = 1000000;
-		int iteration_number = 0;
-
-		boolean Termination = false;
-
-		while (!Termination) {
-			iteration_number++;
-			BestNCost = Double.MAX_VALUE;
-
-			for (VehIndexFrom = 0; VehIndexFrom < this.Vehicles.length; VehIndexFrom++) {
-				RouteFrom = this.Vehicles[VehIndexFrom].Route;
-				int RoutFromLength = RouteFrom.size();
-				for (int i = 1; i < RoutFromLength - 1; i++) { // Not possible to move depot!
-
-					for (VehIndexTo = 0; VehIndexTo < this.Vehicles.length; VehIndexTo++) {
-						RouteTo = this.Vehicles[VehIndexTo].Route;
-						int RouteTolength = RouteTo.size();
-						for (int j = 0; (j < RouteTolength - 1); j++) {// Not possible to move after last Depot!
-
-							MovingNodeDemand = RouteFrom.get(i).demand;
-							if ((VehIndexFrom == VehIndexTo)
-									|| this.Vehicles[VehIndexTo].CheckIfFits(MovingNodeDemand)) {
-								if (((VehIndexFrom == VehIndexTo) && ((j == i) || (j == i - 1))) == false) // Not a move
-																											// that
-																											// Changes
-																											// solution
-																											// cost
-								{
-									double MinusCost1 = CostMatrix[RouteFrom.get(i - 1).NodeId][RouteFrom
-											.get(i).NodeId];
-									double MinusCost2 = CostMatrix[RouteFrom.get(i).NodeId][RouteFrom
-											.get(i + 1).NodeId];
-									double MinusCost3 = CostMatrix[RouteTo.get(j).NodeId][RouteTo.get(j + 1).NodeId];
-
-									double AddedCost1 = CostMatrix[RouteFrom.get(i - 1).NodeId][RouteFrom
-											.get(i + 1).NodeId];
-									double AddedCost2 = CostMatrix[RouteTo.get(j).NodeId][RouteFrom.get(i).NodeId];
-									double AddedCost3 = CostMatrix[RouteFrom.get(i).NodeId][RouteTo.get(j + 1).NodeId];
-
-									NeigthboorCost = AddedCost1 + AddedCost2 + AddedCost3 - MinusCost1 - MinusCost2
-											- MinusCost3;
-
-									if (NeigthboorCost < BestNCost) {
-										BestNCost = NeigthboorCost;
-										SwapIndexA = i;
-										SwapIndexB = j;
-										SwapRouteFrom = VehIndexFrom;
-										SwapRouteTo = VehIndexTo;
-
-									}
-								}
-							}
-						}
-					}
-				}
-			}
-
-			if (BestNCost < 0) {
-
-				RouteFrom = this.Vehicles[SwapRouteFrom].Route;
-				RouteTo = this.Vehicles[SwapRouteTo].Route;
-				this.Vehicles[SwapRouteFrom].Route = null;
-				this.Vehicles[SwapRouteTo].Route = null;
-
-				Node SwapNode = RouteFrom.get(SwapIndexA);
-
-				RouteFrom.remove(SwapIndexA);
-
-				if (SwapRouteFrom == SwapRouteTo) {
-					if (SwapIndexA < SwapIndexB) {
-						RouteTo.add(SwapIndexB, SwapNode);
-					} else {
-						RouteTo.add(SwapIndexB + 1, SwapNode);
-					}
-				} else {
-					RouteTo.add(SwapIndexB + 1, SwapNode);
-				}
-
-				this.Vehicles[SwapRouteFrom].Route = RouteFrom;
-				this.Vehicles[SwapRouteFrom].load -= MovingNodeDemand;
-
-				this.Vehicles[SwapRouteTo].Route = RouteTo;
-				this.Vehicles[SwapRouteTo].load += MovingNodeDemand;
-
-				PastSolutions.add(this.Cost);
-				this.Cost += BestNCost;
-			} else {
-				Termination = true;
-			}
-
-			if (iteration_number == MAX_ITERATIONS) {
-				Termination = true;
-			}
-		}
-		PastSolutions.add(this.Cost);
-
-		try {
-			PrintWriter writer = new PrintWriter("PastSolutionsInter.txt", "UTF-8");
-			for (int i = 0; i < PastSolutions.size(); i++) {
-				writer.println(PastSolutions.get(i) + "\t");
-			}
-			writer.close();
-		} catch (Exception e) {
-		}
-	}
-
-	public void IntraRouteLocalSearch(Node[] Nodes, double[][] CostMatrix) {
-
-		// We use 1-0 exchange move
-		ArrayList<Node> rt;
-		double BestNCost, NeigthboorCost;
-
-		int SwapIndexA = -1, SwapIndexB = -1, SwapRoute = -1;
-
-		int MAX_ITERATIONS = 1000000;
-		int iteration_number = 0;
-
-		boolean Termination = false;
-
-		while (!Termination) {
-			iteration_number++;
-			BestNCost = Double.MAX_VALUE;
-
-			for (int VehIndex = 0; VehIndex < this.Vehicles.length; VehIndex++) {
-				rt = this.Vehicles[VehIndex].Route;
-				int RoutLength = rt.size();
-
-				for (int i = 1; i < RoutLength - 1; i++) { // Not possible to move depot!
-
-					for (int j = 0; (j < RoutLength - 1); j++) {// Not possible to move after last Depot!
-
-						if ((j != i) && (j != i - 1)) { // Not a move that cHanges solution cost
-
-							double MinusCost1 = CostMatrix[rt.get(i - 1).NodeId][rt.get(i).NodeId];
-							double MinusCost2 = CostMatrix[rt.get(i).NodeId][rt.get(i + 1).NodeId];
-							double MinusCost3 = CostMatrix[rt.get(j).NodeId][rt.get(j + 1).NodeId];
-
-							double AddedCost1 = CostMatrix[rt.get(i - 1).NodeId][rt.get(i + 1).NodeId];
-							double AddedCost2 = CostMatrix[rt.get(j).NodeId][rt.get(i).NodeId];
-							double AddedCost3 = CostMatrix[rt.get(i).NodeId][rt.get(j + 1).NodeId];
-
-							NeigthboorCost = AddedCost1 + AddedCost2 + AddedCost3 - MinusCost1 - MinusCost2
-									- MinusCost3;
-
-							if (NeigthboorCost < BestNCost) {
-								BestNCost = NeigthboorCost;
-								SwapIndexA = i;
-								SwapIndexB = j;
-								SwapRoute = VehIndex;
-
-							}
-						}
-					}
-				}
-			}
-
-			if (BestNCost < 0) {
-
-				rt = this.Vehicles[SwapRoute].Route;
-
-				Node SwapNode = rt.get(SwapIndexA);
-
-				rt.remove(SwapIndexA);
-
-				if (SwapIndexA < SwapIndexB) {
-					rt.add(SwapIndexB, SwapNode);
-				} else {
-					rt.add(SwapIndexB + 1, SwapNode);
-				}
-
-				PastSolutions.add(this.Cost);
-				this.Cost += BestNCost;
-			} else {
-				Termination = true;
-			}
-
-			if (iteration_number == MAX_ITERATIONS) {
-				Termination = true;
-			}
-		}
-		PastSolutions.add(this.Cost);
-
-		try {
-			PrintWriter writer = new PrintWriter("PastSolutionsIntra.txt", "UTF-8");
-			for (int i = 0; i < PastSolutions.size(); i++) {
-				writer.println(PastSolutions.get(i) + "\t");
-			}
-			writer.close();
-		} catch (Exception e) {
-		}
-	}
+//	public void InterRouteLocalSearch(Node[] Nodes, double[][] CostMatrix) {
+//
+//		// We use 1-0 exchange move
+//		ArrayList<Node> RouteFrom;
+//		ArrayList<Node> RouteTo;
+//
+//		int MovingNodeDemand = 0;
+//
+//		int VehIndexFrom, VehIndexTo;
+//		double BestNCost, NeigthboorCost;
+//
+//		int SwapIndexA = -1, SwapIndexB = -1, SwapRouteFrom = -1, SwapRouteTo = -1;
+//
+//		int MAX_ITERATIONS = 1000000;
+//		int iteration_number = 0;
+//
+//		boolean Termination = false;
+//
+//		while (!Termination) {
+//			iteration_number++;
+//			BestNCost = Double.MAX_VALUE;
+//
+//			for (VehIndexFrom = 0; VehIndexFrom < this.Vehicles.length; VehIndexFrom++) {
+//				RouteFrom = this.Vehicles[VehIndexFrom].Route;
+//				int RoutFromLength = RouteFrom.size();
+//				for (int i = 1; i < RoutFromLength - 1; i++) { // Not possible to move depot!
+//
+//					for (VehIndexTo = 0; VehIndexTo < this.Vehicles.length; VehIndexTo++) {
+//						RouteTo = this.Vehicles[VehIndexTo].Route;
+//						int RouteTolength = RouteTo.size();
+//						for (int j = 0; (j < RouteTolength - 1); j++) {// Not possible to move after last Depot!
+//
+//							MovingNodeDemand = RouteFrom.get(i).demand;
+//							if ((VehIndexFrom == VehIndexTo)
+//									|| this.Vehicles[VehIndexTo].CheckIfFits(MovingNodeDemand)) {
+//								if (((VehIndexFrom == VehIndexTo) && ((j == i) || (j == i - 1))) == false) // Not a move
+//																											// that
+//																											// Changes
+//																											// solution
+//																											// cost
+//								{
+//									double MinusCost1 = CostMatrix[RouteFrom.get(i - 1).NodeId][RouteFrom
+//											.get(i).NodeId];
+//									double MinusCost2 = CostMatrix[RouteFrom.get(i).NodeId][RouteFrom
+//											.get(i + 1).NodeId];
+//									double MinusCost3 = CostMatrix[RouteTo.get(j).NodeId][RouteTo.get(j + 1).NodeId];
+//
+//									double AddedCost1 = CostMatrix[RouteFrom.get(i - 1).NodeId][RouteFrom
+//											.get(i + 1).NodeId];
+//									double AddedCost2 = CostMatrix[RouteTo.get(j).NodeId][RouteFrom.get(i).NodeId];
+//									double AddedCost3 = CostMatrix[RouteFrom.get(i).NodeId][RouteTo.get(j + 1).NodeId];
+//
+//									NeigthboorCost = AddedCost1 + AddedCost2 + AddedCost3 - MinusCost1 - MinusCost2
+//											- MinusCost3;
+//
+//									if (NeigthboorCost < BestNCost) {
+//										BestNCost = NeigthboorCost;
+//										SwapIndexA = i;
+//										SwapIndexB = j;
+//										SwapRouteFrom = VehIndexFrom;
+//										SwapRouteTo = VehIndexTo;
+//
+//									}
+//								}
+//							}
+//						}
+//					}
+//				}
+//			}
+//
+//			if (BestNCost < 0) {
+//
+//				RouteFrom = this.Vehicles[SwapRouteFrom].Route;
+//				RouteTo = this.Vehicles[SwapRouteTo].Route;
+//				this.Vehicles[SwapRouteFrom].Route = null;
+//				this.Vehicles[SwapRouteTo].Route = null;
+//
+//				Node SwapNode = RouteFrom.get(SwapIndexA);
+//
+//				RouteFrom.remove(SwapIndexA);
+//
+//				if (SwapRouteFrom == SwapRouteTo) {
+//					if (SwapIndexA < SwapIndexB) {
+//						RouteTo.add(SwapIndexB, SwapNode);
+//					} else {
+//						RouteTo.add(SwapIndexB + 1, SwapNode);
+//					}
+//				} else {
+//					RouteTo.add(SwapIndexB + 1, SwapNode);
+//				}
+//
+//				this.Vehicles[SwapRouteFrom].Route = RouteFrom;
+//				this.Vehicles[SwapRouteFrom].load -= MovingNodeDemand;
+//
+//				this.Vehicles[SwapRouteTo].Route = RouteTo;
+//				this.Vehicles[SwapRouteTo].load += MovingNodeDemand;
+//
+//				PastSolutions.add(this.Cost);
+//				this.Cost += BestNCost;
+//			} else {
+//				Termination = true;
+//			}
+//
+//			if (iteration_number == MAX_ITERATIONS) {
+//				Termination = true;
+//			}
+//		}
+//		PastSolutions.add(this.Cost);
+//
+//		try {
+//			PrintWriter writer = new PrintWriter("PastSolutionsInter.txt", "UTF-8");
+//			for (int i = 0; i < PastSolutions.size(); i++) {
+//				writer.println(PastSolutions.get(i) + "\t");
+//			}
+//			writer.close();
+//		} catch (Exception e) {
+//		}
+//	}
+//
+//	public void IntraRouteLocalSearch(Node[] Nodes, double[][] CostMatrix) {
+//
+//		// We use 1-0 exchange move
+//		ArrayList<Node> rt;
+//		double BestNCost, NeigthboorCost;
+//
+//		int SwapIndexA = -1, SwapIndexB = -1, SwapRoute = -1;
+//
+//		int MAX_ITERATIONS = 1000000;
+//		int iteration_number = 0;
+//
+//		boolean Termination = false;
+//
+//		while (!Termination) {
+//			iteration_number++;
+//			BestNCost = Double.MAX_VALUE;
+//
+//			for (int VehIndex = 0; VehIndex < this.Vehicles.length; VehIndex++) {
+//				rt = this.Vehicles[VehIndex].Route;
+//				int RoutLength = rt.size();
+//
+//				for (int i = 1; i < RoutLength - 1; i++) { // Not possible to move depot!
+//
+//					for (int j = 0; (j < RoutLength - 1); j++) {// Not possible to move after last Depot!
+//
+//						if ((j != i) && (j != i - 1)) { // Not a move that cHanges solution cost
+//
+//							double MinusCost1 = CostMatrix[rt.get(i - 1).NodeId][rt.get(i).NodeId];
+//							double MinusCost2 = CostMatrix[rt.get(i).NodeId][rt.get(i + 1).NodeId];
+//							double MinusCost3 = CostMatrix[rt.get(j).NodeId][rt.get(j + 1).NodeId];
+//
+//							double AddedCost1 = CostMatrix[rt.get(i - 1).NodeId][rt.get(i + 1).NodeId];
+//							double AddedCost2 = CostMatrix[rt.get(j).NodeId][rt.get(i).NodeId];
+//							double AddedCost3 = CostMatrix[rt.get(i).NodeId][rt.get(j + 1).NodeId];
+//
+//							NeigthboorCost = AddedCost1 + AddedCost2 + AddedCost3 - MinusCost1 - MinusCost2
+//									- MinusCost3;
+//
+//							if (NeigthboorCost < BestNCost) {
+//								BestNCost = NeigthboorCost;
+//								SwapIndexA = i;
+//								SwapIndexB = j;
+//								SwapRoute = VehIndex;
+//
+//							}
+//						}
+//					}
+//				}
+//			}
+//
+//			if (BestNCost < 0) {
+//
+//				rt = this.Vehicles[SwapRoute].Route;
+//
+//				Node SwapNode = rt.get(SwapIndexA);
+//
+//				rt.remove(SwapIndexA);
+//
+//				if (SwapIndexA < SwapIndexB) {
+//					rt.add(SwapIndexB, SwapNode);
+//				} else {
+//					rt.add(SwapIndexB + 1, SwapNode);
+//				}
+//
+//				PastSolutions.add(this.Cost);
+//				this.Cost += BestNCost;
+//			} else {
+//				Termination = true;
+//			}
+//
+//			if (iteration_number == MAX_ITERATIONS) {
+//				Termination = true;
+//			}
+//		}
+//		PastSolutions.add(this.Cost);
+//
+//		try {
+//			PrintWriter writer = new PrintWriter("PastSolutionsIntra.txt", "UTF-8");
+//			for (int i = 0; i < PastSolutions.size(); i++) {
+//				writer.println(PastSolutions.get(i) + "\t");
+//			}
+//			writer.close();
+//		} catch (Exception e) {
+//		}
+//	}
 
 	public void SolutionPrint(String Solution_Label)// Print Solution In console
 	{

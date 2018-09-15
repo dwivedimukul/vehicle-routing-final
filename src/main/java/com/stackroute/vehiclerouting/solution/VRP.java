@@ -9,7 +9,7 @@ public class VRP {
 		Random ran = new Random(151190);
 
 		// Problem Parameters
-		int NoOfCustomers = 30;
+		int NoOfCustomers = 1;
 		int NoOfVehicles = 10;
 		int VehicleCap = 50;
 
@@ -68,19 +68,19 @@ public class VRP {
 
 		Solution s = new Solution(NoOfCustomers, NoOfVehicles, VehicleCap);
 
-		s.GreedySolution(Nodes, distanceMatrix);
+//		s.GreedySolution(Nodes, distanceMatrix);
+//
+//		s.SolutionPrint("Greedy Solution");
 
-		s.SolutionPrint("Greedy Solution");
-
-		s.IntraRouteLocalSearch(Nodes, distanceMatrix);
-
-		s.SolutionPrint("Solution after Intra-Route Heuristic Neighborhood Search");
-
-		s.GreedySolution(Nodes, distanceMatrix);
-
-		s.InterRouteLocalSearch(Nodes, distanceMatrix);
-
-		s.SolutionPrint("Solution after Inter-Route Heuristic Neighborhood Search");
+//		s.IntraRouteLocalSearch(Nodes, distanceMatrix);
+//
+//		s.SolutionPrint("Solution after Intra-Route Heuristic Neighborhood Search");
+//
+//		s.GreedySolution(Nodes, distanceMatrix);
+//
+//		s.InterRouteLocalSearch(Nodes, distanceMatrix);
+//
+//		s.SolutionPrint("Solution after Inter-Route Heuristic Neighborhood Search");
 
 		s.GreedySolution(Nodes, distanceMatrix);
 
